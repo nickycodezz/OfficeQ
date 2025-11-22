@@ -8,6 +8,9 @@ function App() {
   
   // NEW STATE: Tracks the details of the professor selected by the student
   const [selectedProfDetails, setSelectedProfDetails] = useState(null); // { id, name, office }
+  
+  // NEW STATE: Tracks the logged-in professor's data
+  const [loggedInProfessor, setLoggedInProfessor] = useState(null); // { id, name, email, office }
 
   // Function to handle professor selection from the LandingPage
   const handleSelectProfessor = (id, name, office) => {
@@ -19,6 +22,7 @@ function App() {
   const handleBack = () => {
     setView('landing');
     setSelectedProfDetails(null); // Clear selection when returning to home
+    setLoggedInProfessor(null); // Clear logged-in professor when returning to home
   };
 
   // --- 1. RENDER STUDENT VIEW ---
@@ -35,16 +39,20 @@ function App() {
   }
 
   // --- 2. RENDER PROFESSOR VIEW ---
-  if (view === 'professor') {
-    // Note: You might want to pass a professor ID here later for security/login
-    return <ProfessorView onBack={handleBack} />;
+  if (view === 'professor' && loggedInProfessor) {
+    return <ProfessorView onBack={handleBack} professorData={loggedInProfessor} />;
   }
 
   // --- 3. RENDER LANDING PAGE ---
   return (
     <LandingPage 
-      // This prop handles the initial click on the "Professor" card
-      onSelectRole={(role) => setView(role)} 
+      // This prop handles the professor login and role selection
+      onSelectRole={(role, professorData) => {
+        setView(role);
+        if (role === 'professor' && professorData) {
+          setLoggedInProfessor(professorData);
+        }
+      }} 
       
       // This NEW prop handles the click on a specific professor's "Join Queue" button
       onSelectProfessor={handleSelectProfessor}

@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { collection, getDocs } from 'firebase/firestore';
 import { db } from '../firebase'; // Import the database instance
+import ProfessorLoginModal from './ProfessorLoginModal';
 
 // Rename the function to match the file name: LandingPage
 function Landing({ onSelectRole, onSelectProfessor }) {
@@ -8,6 +9,7 @@ function Landing({ onSelectRole, onSelectProfessor }) {
   // State to hold the list of professors
   const [professors, setProfessors] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [showLoginModal, setShowLoginModal] = useState(false);
 
   // --- 1. FETCH PROFESSOR DATA (One-Time Read) ---
   useEffect(() => {
@@ -62,7 +64,7 @@ function Landing({ onSelectRole, onSelectProfessor }) {
             <h2 className="text-3xl font-bold mb-3 text-gray-800 text-center">Professors</h2>
             <p className="text-gray-600 mb-6 text-center">Manage your office hours queue.</p>
             <button 
-              onClick={() => onSelectRole('professor')} // Triggers the external role change
+              onClick={() => setShowLoginModal(true)} // Show login modal
               className="w-full bg-green-500 hover:bg-green-600 text-white font-semibold py-3 rounded-lg transition transform hover:scale-105"
             >
               Open Dashboard
@@ -73,6 +75,17 @@ function Landing({ onSelectRole, onSelectProfessor }) {
         <footer className="text-white text-center mt-12 pb-8 px-4">
           <p className="text-sm opacity-75">Built for USF • Skip the line, save time</p>
         </footer>
+
+        {/* Professor Login Modal */}
+        {showLoginModal && (
+          <ProfessorLoginModal
+            onLogin={(professorData) => {
+              setShowLoginModal(false);
+              onSelectRole('professor', professorData);
+            }}
+            onClose={() => setShowLoginModal(false)}
+          />
+        )}
       </div>
     );
   }

@@ -16,15 +16,14 @@ import {
 // Import the database instance you exported:
 import { db } from '../firebase';
 
-// IMPORTANT: Replace this placeholder with the actual professor document ID
-// from your 'professors' collection (the Auto-ID you copied earlier).
-const PROFESSOR_ID = 'YOUR_PROFESSOR_DOC_ID'; 
-
-function ProfessorView({ onBack }) {
+function ProfessorView({ onBack, professorData }) {
   // State for real queue data and loading status
   const [queue, setQueue] = useState([]);
   const [loading, setLoading] = useState(true);
   const [status, setStatus] = useState('available'); // available, busy, offline
+  
+  // Use the professorData passed from App.jsx
+  const PROFESSOR_ID = professorData?.id;
 
   // --- 1. FIREBASE REAL-TIME LISTENER (useEffect) ---
   useEffect(() => {
@@ -114,8 +113,8 @@ function ProfessorView({ onBack }) {
         <div className="bg-white rounded-xl shadow-2xl p-8">
           <div className="flex justify-between items-center mb-6">
             <div>
-              <h1 className="text-3xl font-bold text-gray-800">Dr. Smith's Dashboard</h1>
-              <p className="text-gray-600">ENG 301 - Office Hours</p>
+              <h1 className="text-3xl font-bold text-gray-800">{professorData?.name}'s Dashboard</h1>
+              <p className="text-gray-600">Office: {professorData?.office || 'Not specified'}</p>
             </div>
             <div className="text-right">
               <div className="flex items-center gap-2 mb-2">
