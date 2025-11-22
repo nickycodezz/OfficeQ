@@ -1,2 +1,0 @@
-# OfficeQ
-HackJam
