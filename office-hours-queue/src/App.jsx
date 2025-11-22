@@ -1,16 +1,20 @@
+import { useState } from 'react'
+import Landing from './components/Landing'
+import StudentView from './components/StudentView'
+import ProfessorView from './components/ProfessorView'
+
 function App() {
-  return (
-    <div className="min-h-screen bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center">
-      <div className="bg-white p-8 rounded-xl shadow-2xl">
-        <h1 className="text-5xl font-bold text-gray-800 mb-4">
-          🎉 Tailwind Works!
-        </h1>
-        <p className="text-gray-600 text-xl">
-          QueueUp is ready to build!
-        </p>
-      </div>
-    </div>
-  )
+  const [view, setView] = useState('landing') // landing, student, professor
+
+  if (view === 'student') {
+    return <StudentView onBack={() => setView('landing')} />
+  }
+
+  if (view === 'professor') {
+    return <ProfessorView onBack={() => setView('landing')} />
+  }
+
+  return <Landing onSelectRole={(role) => setView(role)} />
 }
 
 export default App
