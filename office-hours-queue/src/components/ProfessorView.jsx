@@ -1,41 +1,117 @@
-import { useState } from 'react'
+import React, { useState, useEffect } from 'react';
+
+// Firebase imports needed for the query:
+import { 
+  collection, 
+  onSnapshot, 
+  query, 
+  where, 
+  orderBy,
+  // Add doc, updateDoc, and deleteDoc for status and callNextStudent logic (Future Steps)
+  doc,
+  updateDoc,
+  deleteDoc,
+} from 'firebase/firestore';
+
+// Import the database instance you exported:
+import { db } from '../firebase';
+
+// IMPORTANT: Replace this placeholder with the actual professor document ID
+// from your 'professors' collection (the Auto-ID you copied earlier).
+const PROFESSOR_ID = 'YOUR_PROFESSOR_DOC_ID'; 
 
 function ProfessorView({ onBack }) {
-  const [queue, setQueue] = useState([
-    { id: 1, name: 'John Doe', joinedAt: '8 minutes ago' },
-    { id: 2, name: 'Sarah Miller', joinedAt: '5 minutes ago' },
-    { id: 3, name: 'Alex Johnson', joinedAt: '3 minutes ago' },
-    { id: 4, name: 'Mike Lee', joinedAt: '1 minute ago' },
-  ])
-  const [status, setStatus] = useState('available') // available, busy, offline
+  // State for real queue data and loading status
+  const [queue, setQueue] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [status, setStatus] = useState('available'); // available, busy, offline
 
-  const callNextStudent = () => {
+  // --- 1. FIREBASE REAL-TIME LISTENER (useEffect) ---
+  useEffect(() => {
+    // 1. Construct the Query
+    const queueQuery = query(
+      collection(db, 'queue_entries'),
+      where('professorId', '==', PROFESSOR_ID), // Filter by this professor's ID
+      where('status', '==', 'waiting'),
+      orderBy('position', 'asc')
+    );
+    
+    // 2. Set up the Real-Time Listener (onSnapshot)
+    const unsubscribe = onSnapshot(queueQuery, (snapshot) => {
+      const queueEntries = snapshot.docs.map(doc => ({
+        id: doc.id,
+        // The ...doc.data() includes studentName, joinedAt, position, etc.
+        ...doc.data()
+      }));
+      
+      setQueue(queueEntries);
+      setLoading(false);
+    }, (error) => {
+      console.error("Error fetching queue:", error);
+      setLoading(false);
+    });
+
+    // 3. Clean up the listener when the component is removed
+    return () => unsubscribe();
+    
+  // Empty dependency array means this effect runs only on mount/unmount
+  }, []); 
+
+  // --- 2. ACTION FUNCTIONS (Placeholder for Firebase Writes) ---
+
+  const callNextStudent = async () => {
     if (queue.length > 0) {
-      const nextStudent = queue[0]
-      alert(`Calling ${nextStudent.name} - They have been notified!`)
-      setQueue(queue.slice(1))
+      const nextStudent = queue[0];
+      
+      try {
+        // Find the document in the 'queue_entries' collection
+        const studentDocRef = doc(db, 'queue_entries', nextStudent.id);
+        
+        // FUTURE: Instead of deleting, we typically UPDATE the status to 'called' or 'done'
+        await deleteDoc(studentDocRef);
+        
+        // This alert is just for confirmation
+        alert(`Calling ${nextStudent.studentName} - They have been removed from the queue!`);
+        
+        // Note: setQueue(queue.slice(1)) is NO LONGER NEEDED. 
+        // Firestore update handles the state change automatically!
+        
+      } catch (error) {
+        console.error("Error removing student:", error);
+      }
     }
+  };
+
+  const toggleStatus = async () => {
+    // FUTURE: This logic should update the 'professors' document in Firestore
+    const newStatus = status === 'available' ? 'busy' : 'available';
+    // const professorDocRef = doc(db, 'professors', PROFESSOR_ID);
+    // await updateDoc(professorDocRef, { isAvailable: newStatus === 'available' });
+    
+    setStatus(newStatus);
+  };
+  
+  // --- 3. RENDER LOGIC ---
+
+  if (loading) {
+    return <div className="text-center p-20 text-xl">Loading Queue...</div>;
   }
 
-  const toggleStatus = () => {
-    setStatus(status === 'available' ? 'busy' : 'available')
+  // Helper function to show time since joined (requires proper date object)
+  // For now, we'll display the 'joinedAt' field from Firestore directly
+  const formatTimeAgo = (timestamp) => {
+    // You would implement real date formatting here, but for now:
+    return timestamp ? 'A moment ago' : 'N/A';
   }
+
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-green-500 to-blue-600 p-4">
       <div className="max-w-3xl mx-auto pt-12">
-        <div className="flex justify-between items-center mb-6">
-          <button 
-            onClick={onBack}
-            className="text-white flex items-center hover:underline"
-          >
-            ← Back to Home
-          </button>
-          <button className="text-white hover:underline">⚙️ Settings</button>
-        </div>
-
+        {/* ... (Unchanged navigation and header JSX) ... */}
+        
+        {/* Header */}
         <div className="bg-white rounded-xl shadow-2xl p-8">
-          {/* Header */}
           <div className="flex justify-between items-center mb-6">
             <div>
               <h1 className="text-3xl font-bold text-gray-800">Dr. Smith's Dashboard</h1>
@@ -54,8 +130,9 @@ function ProfessorView({ onBack }) {
           {queue.length > 0 ? (
             <div className="bg-gradient-to-r from-green-500 to-green-600 text-white p-6 rounded-xl mb-6">
               <p className="text-sm mb-2 opacity-90">Next Student:</p>
-              <h2 className="text-3xl font-bold mb-1">#{1} {queue[0].name}</h2>
-              <p className="text-sm opacity-90 mb-4">Joined {queue[0].joinedAt}</p>
+              {/* Note: Firestore studentName field is used here */}
+              <h2 className="text-3xl font-bold mb-1">#{queue[0].position} {queue[0].studentName}</h2>
+              <p className="text-sm opacity-90 mb-4">Joined {formatTimeAgo(queue[0].joinedAt)}</p>
               <button 
                 onClick={callNextStudent}
                 className="w-full bg-white text-green-600 font-semibold py-3 rounded-lg hover:bg-gray-100 transition"
@@ -75,11 +152,12 @@ function ProfessorView({ onBack }) {
             <div className="mb-6">
               <h3 className="text-xl font-bold text-gray-800 mb-4">Waiting:</h3>
               <div className="space-y-3">
-                {queue.slice(1).map((student, index) => (
+                {queue.slice(1).map((student) => (
                   <div key={student.id} className="flex items-center justify-between p-4 bg-gray-50 rounded-lg border border-gray-200">
                     <div>
-                      <p className="font-semibold">#{index + 2} {student.name}</p>
-                      <p className="text-sm text-gray-500">Joined {student.joinedAt}</p>
+                      {/* Note: Firestore studentName and position fields are used here */}
+                      <p className="font-semibold">#{student.position} {student.studentName}</p>
+                      <p className="text-sm text-gray-500">Joined {formatTimeAgo(student.joinedAt)}</p>
                     </div>
                     <button className="text-red-500 hover:text-red-600 text-sm">
                       Remove
@@ -112,4 +190,4 @@ function ProfessorView({ onBack }) {
   )
 }
 
-export default ProfessorView
+export default ProfessorView;

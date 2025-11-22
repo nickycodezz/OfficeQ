@@ -1,24 +1,144 @@
-import { useState } from 'react'
+import React, { useState, useEffect } from 'react';
+import { 
+  collection, 
+  addDoc, 
+  deleteDoc, 
+  onSnapshot, 
+  query, 
+  where, 
+  doc, 
+  serverTimestamp, 
+  orderBy 
+} from 'firebase/firestore';
 
-function StudentView({ onBack }) {
-  const [inQueue, setInQueue] = useState(false)
-  const [position, setPosition] = useState(3)
-  const [studentName, setStudentName] = useState('')
+import { db } from '../firebase';
 
-  const joinQueue = () => {
-    if (studentName.trim()) {
-      setInQueue(true)
-    } else {
-      alert('Please enter your name!')
+// Assume you pass the professor's ID and name from the LandingPage
+function StudentView({ onBack, professorId, professorName, professorOffice }) {
+  
+  // State to track the queue entry ID for monitoring/deletion
+  const [queueDocId, setQueueDocId] = useState(null); 
+  
+  // State for the student's current position and overall queue length
+  const [position, setPosition] = useState(null);
+  const [queueLength, setQueueLength] = useState(0); 
+
+  // Form states
+  const [studentName, setStudentName] = useState('');
+  const [studentEmail, setStudentEmail] = useState(''); 
+  
+  const [isJoining, setIsJoining] = useState(false);
+  const [loadingQueue, setLoadingQueue] = useState(true);
+  
+  // --- 1. FIREBASE WRITE: JOIN QUEUE ---
+  const joinQueue = async (e) => {
+    e.preventDefault(); // Prevent form submission refresh
+    
+    if (!studentName.trim() || !studentEmail.trim()) {
+      alert('Please enter your name and email!');
+      return;
     }
-  }
+    
+    setIsJoining(true);
+    
+    try {
+      // Find the last position or let a Cloud Function handle this
+      // For simplicity here, we rely on the ProfessorView logic to show order
+      const newDocRef = await addDoc(collection(db, 'queue_entries'), {
+        professorId: professorId, // Use prop
+        studentName: studentName.trim(),
+        studentEmail: studentEmail.trim(), // Best to save email for tracking
+        position: 999, // Placeholder position
+        status: 'waiting',
+        joinedAt: serverTimestamp(),
+        estimatedWaitMinutes: 10 // Placeholder
+      });
+      
+      // Store the new document ID to monitor its position later
+      setQueueDocId(newDocRef.id); 
+      
+    } catch (error) {
+      console.error("Error joining queue:", error);
+      alert('Failed to join the queue. Check console for details.');
+    } finally {
+      setIsJoining(false);
+    }
+  };
 
-  const leaveQueue = () => {
-    setInQueue(false)
-    setStudentName('')
-  }
+  // --- 2. FIREBASE DELETE: LEAVE QUEUE ---
+  const leaveQueue = async () => {
+    if (!queueDocId) return;
 
-  if (!inQueue) {
+    try {
+      const docRef = doc(db, 'queue_entries', queueDocId);
+      await deleteDoc(docRef);
+      
+      // Reset local state after successful deletion
+      setQueueDocId(null);
+      setStudentName('');
+      setStudentEmail('');
+      setPosition(null);
+      setQueueLength(0);
+      
+      alert('You have successfully left the queue.');
+
+    } catch (error) {
+      console.error("Error leaving queue:", error);
+    }
+  };
+
+
+  // --- 3. FIREBASE REAL-TIME READ: MONITOR QUEUE STATUS ---
+  useEffect(() => {
+    if (!professorId) return;
+
+    // Query 1: Get the full list of waiting students for estimated wait time
+    const fullQueueQuery = query(
+        collection(db, 'queue_entries'),
+        where('professorId', '==', professorId),
+        where('status', '==', 'waiting'),
+        orderBy('joinedAt', 'asc') // Use joinedAt as reliable order field
+    );
+    
+    const unsubscribeQueue = onSnapshot(fullQueueQuery, (snapshot) => {
+      const currentQueue = snapshot.docs.map(doc => ({
+        id: doc.id,
+        ...doc.data()
+      }));
+
+      setQueueLength(currentQueue.length); // Update total queue length
+      
+      // Find the student's current position based on the doc ID
+      const myIndex = currentQueue.findIndex(entry => entry.id === queueDocId);
+      
+      if (myIndex !== -1) {
+        // Position is index + 1
+        setPosition(myIndex + 1);
+      } else if (queueDocId) {
+        // If the doc ID is set but not found in the snapshot, the professor must have removed/called them.
+        // We can assume they were just called and reset the state.
+        setQueueDocId(null); 
+        setPosition(null);
+        alert('It looks like your turn has arrived! Please head to the office.');
+      }
+      
+      setLoadingQueue(false);
+    }, (error) => {
+        console.error("Error monitoring queue:", error);
+        setLoadingQueue(false);
+    });
+
+    // Cleanup function
+    return () => unsubscribeQueue();
+
+  // Dependency array includes queueDocId so the monitoring starts/restarts when the student joins/leaves
+  }, [professorId, queueDocId]); 
+
+
+  // --- 4. RENDER LOGIC ---
+
+  // Renders the Join Form if queueDocId is null (meaning not in queue)
+  if (!queueDocId) { 
     return (
       <div className="min-h-screen bg-gradient-to-br from-green-500 to-blue-600 p-4">
         <div className="max-w-2xl mx-auto pt-12">
@@ -29,14 +149,12 @@ function StudentView({ onBack }) {
             ← Back to Home
           </button>
 
-          <div className="bg-white rounded-xl shadow-2xl p-8">
+          <form onSubmit={joinQueue} className="bg-white rounded-xl shadow-2xl p-8">
             <h1 className="text-3xl font-bold text-gray-800 mb-2">Join Office Hours</h1>
-            <p className="text-gray-600 mb-6">Dr. Smith - ENG 301 - Room 123</p>
+            <p className="text-gray-600 mb-6">{professorName} - {professorOffice}</p> {/* Use props */}
 
-            <div className="mb-6">
-              <label className="block text-gray-700 font-semibold mb-2">
-                Your Name:
-              </label>
+            <div className="mb-4">
+              <label className="block text-gray-700 font-semibold mb-2">Your Name:</label>
               <input 
                 type="text"
                 value={studentName}
@@ -46,27 +164,51 @@ function StudentView({ onBack }) {
               />
             </div>
 
+            <div className="mb-6">
+              <label className="block text-gray-700 font-semibold mb-2">Your Email:</label>
+              <input 
+                type="email"
+                value={studentEmail}
+                onChange={(e) => setStudentEmail(e.target.value)}
+                placeholder="Enter your university email"
+                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+              />
+            </div>
+
+
             <div className="bg-blue-50 p-4 rounded-lg mb-6">
-              <p className="text-sm text-gray-700">
-                <strong>Current Queue:</strong> 3 students waiting
-              </p>
-              <p className="text-sm text-gray-700">
-                <strong>Estimated wait:</strong> ~15 minutes
-              </p>
+              {loadingQueue ? (
+                <p className="text-sm text-gray-700">Loading queue status...</p>
+              ) : (
+                <>
+                  <p className="text-sm text-gray-700">
+                    <strong>Current Queue:</strong> {queueLength} students waiting
+                  </p>
+                  <p className="text-sm text-gray-700">
+                    <strong>Estimated wait:</strong> ~{queueLength * 5} minutes
+                  </p>
+                </>
+              )}
             </div>
 
             <button 
-              onClick={joinQueue}
-              className="w-full bg-blue-500 hover:bg-blue-600 text-white font-semibold py-3 rounded-lg transition transform hover:scale-105"
+              type="submit"
+              disabled={isJoining || !professorId}
+              className={`w-full font-semibold py-3 rounded-lg transition transform hover:scale-105 ${
+                isJoining 
+                  ? 'bg-gray-400 text-gray-700 cursor-not-allowed' 
+                  : 'bg-blue-500 hover:bg-blue-600 text-white'
+              }`}
             >
-              Join Queue
+              {isJoining ? 'Joining...' : 'Join Queue'}
             </button>
-          </div>
+          </form>
         </div>
       </div>
-    )
+    );
   }
 
+  // Renders the Status View if queueDocId is set (meaning in queue)
   return (
     <div className="min-h-screen bg-gradient-to-br from-green-500 to-blue-600 p-4">
       <div className="max-w-2xl mx-auto pt-12">
@@ -78,15 +220,22 @@ function StudentView({ onBack }) {
         </button>
 
         <div className="bg-white rounded-xl shadow-2xl p-8">
-          <h1 className="text-3xl font-bold text-gray-800 mb-2">Dr. Smith's Office Hours</h1>
-          <p className="text-gray-600 mb-6">ENG 301 - Room 123</p>
+          <h1 className="text-3xl font-bold text-gray-800 mb-2">{professorName}'s Office Hours</h1>
+          <p className="text-gray-600 mb-6">{professorOffice}</p>
 
           {/* Position Card */}
           <div className="bg-gradient-to-r from-blue-500 to-blue-600 text-white p-8 rounded-xl mb-6 text-center">
-            <p className="text-lg mb-2">You are</p>
-            <p className="text-7xl font-bold mb-2">#{position}</p>
-            <p className="text-lg">in line</p>
-            <p className="mt-4 text-blue-100">Estimated wait: ~{position * 5} minutes</p>
+            {position !== null && (
+                <>
+                    <p className="text-lg mb-2">You are</p>
+                    <p className="text-7xl font-bold mb-2">#{position}</p>
+                    <p className="text-lg">in line</p>
+                    <p className="mt-4 text-blue-100">Estimated wait: ~{position * 5} minutes</p>
+                </>
+            )}
+            {position === 1 && (
+                <p className="text-2xl font-semibold mt-4">You are next! Get ready.</p>
+            )}
           </div>
 
           <button 
@@ -95,33 +244,10 @@ function StudentView({ onBack }) {
           >
             Leave Queue
           </button>
-
-          {/* Current Queue */}
-          <div className="border-t pt-6">
-            <h3 className="text-xl font-bold text-gray-800 mb-4">Current Queue:</h3>
-            <div className="space-y-3">
-              <div className="flex items-center justify-between p-3 bg-green-50 rounded-lg">
-                <span className="font-semibold">1️⃣ John D.</span>
-                <span className="text-sm text-green-600">Being helped now</span>
-              </div>
-              <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
-                <span className="font-semibold">2️⃣ Sarah M.</span>
-                <span className="text-sm text-gray-500">Next up</span>
-              </div>
-              <div className="flex items-center justify-between p-3 bg-blue-50 rounded-lg border-2 border-blue-500">
-                <span className="font-semibold">3️⃣ {studentName}</span>
-                <span className="text-sm text-blue-600">You</span>
-              </div>
-              <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
-                <span className="font-semibold">4️⃣ Mike L.</span>
-                <span className="text-sm text-gray-500">Waiting</span>
-              </div>
-            </div>
-          </div>
         </div>
       </div>
     </div>
-  )
+  );
 }
 
-export default StudentView
+export default StudentView;
