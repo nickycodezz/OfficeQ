@@ -8,7 +8,8 @@ import {
   orderBy,
   deleteDoc,
   doc,
-  getDocs
+  getDocs,
+  updateDoc
 } from 'firebase/firestore'
 import { db } from '../firebase'
 
@@ -40,15 +41,16 @@ function StudentView({ onBack, professorId, professorName, professorOffice }) {
       setQueueData(entries)
       setLoading(false)
 
-      // Check if we're in the queue
+      // Check if we're in the queue and update our entry with latest data
       if (myQueueEntry) {
-        const stillInQueue = entries.find(entry => entry.id === myQueueEntry.id)
-        if (!stillInQueue) {
+        const updatedEntry = entries.find(entry => entry.id === myQueueEntry.id)
+        if (!updatedEntry) {
           // We've been removed from the queue
           setInQueue(false)
           setMyQueueEntry(null)
         } else {
-          setMyQueueEntry(stillInQueue)
+          // Update with latest data including position changes
+          setMyQueueEntry(updatedEntry)
         }
       }
     }, (error) => {
@@ -57,7 +59,7 @@ function StudentView({ onBack, professorId, professorName, professorOffice }) {
     })
 
     return () => unsubscribe()
-  }, [professorId, myQueueEntry])
+  }, [professorId, myQueueEntry?.id]) // Only depend on the ID, not the whole object
 
   // Calculate position and wait time
   const getMyPosition = () => {
@@ -115,12 +117,20 @@ function StudentView({ onBack, professorId, professorName, professorOffice }) {
     if (!myQueueEntry) return
 
     try {
+      const myPosition = myQueueEntry.position;
+      
       // Delete from Firebase
       await deleteDoc(doc(db, 'queue_entries', myQueueEntry.id))
       
       // Update positions of students after us
-      const studentsAfter = queueData.filter(entry => entry.position > myQueueEntry.position)
-      // Note: In production, you'd want to use a Cloud Function to handle position updates
+      const studentsAfter = queueData.filter(entry => entry.position > myPosition)
+      const updatePromises = studentsAfter.map(student => {
+        return updateDoc(doc(db, 'queue_entries', student.id), {
+          position: student.position - 1
+        });
+      });
+      
+      await Promise.all(updatePromises);
       
       setInQueue(false)
       setMyQueueEntry(null)

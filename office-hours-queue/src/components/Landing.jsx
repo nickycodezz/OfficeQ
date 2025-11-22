@@ -82,7 +82,13 @@ function Landing({ onSelectRole, onSelectProfessor }) {
         <div className="max-w-4xl mx-auto grid md:grid-cols-2 gap-6 px-4 relative z-10">
           {/* Student Card */}
           <div className="bg-white p-8 rounded-xl shadow-2xl hover:shadow-3xl transition border-2 border-yellow-400">
-            <div className="text-6xl mb-4 text-center">🎓</div>
+            <div className="text-center mb-4">
+              <div className="w-20 h-20 mx-auto bg-gradient-to-br from-yellow-400 to-yellow-500 rounded-full flex items-center justify-center shadow-lg">
+                <svg className="w-12 h-12 text-emerald-900" fill="currentColor" viewBox="0 0 24 24">
+                  <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 3c1.66 0 3 1.34 3 3s-1.34 3-3 3-3-1.34-3-3 1.34-3 3-3zm0 14.2c-2.5 0-4.71-1.28-6-3.22.03-1.99 4-3.08 6-3.08 1.99 0 5.97 1.09 6 3.08-1.29 1.94-3.5 3.22-6 3.22z"/>
+                </svg>
+              </div>
+            </div>
             <h2 className="text-3xl font-bold mb-3 text-emerald-900 text-center">Students</h2>
             <p className="text-gray-700 mb-6 text-center">Join your professor's queue.</p>
             <button 
@@ -95,7 +101,13 @@ function Landing({ onSelectRole, onSelectProfessor }) {
 
           {/* Professor Card */}
           <div className="bg-white p-8 rounded-xl shadow-2xl hover:shadow-3xl transition border-2 border-emerald-700">
-            <div className="text-6xl mb-4 text-center">👨‍🏫</div>
+            <div className="text-center mb-4">
+              <div className="w-20 h-20 mx-auto bg-gradient-to-br from-emerald-700 to-emerald-800 rounded-full flex items-center justify-center shadow-lg">
+                <svg className="w-12 h-12 text-white" fill="currentColor" viewBox="0 0 24 24">
+                  <path d="M12 3L1 9l4 2.18v6L12 21l7-3.82v-6l2-1.09V17h2V9L12 3zm6.82 6L12 12.72 5.18 9 12 5.28 18.82 9zM17 15.99l-5 2.73-5-2.73v-3.72L12 15l5-2.73v3.72z"/>
+                </svg>
+              </div>
+            </div>
             <h2 className="text-3xl font-bold mb-3 text-emerald-900 text-center">Professors</h2>
             <p className="text-gray-700 mb-6 text-center">Manage your office hours queue.</p>
             <button 

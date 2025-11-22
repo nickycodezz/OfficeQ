@@ -69,20 +69,26 @@ function ProfessorView({ onBack, professorData }) {
       const nextStudent = queue[0];
       
       try {
-        // Find the document in the 'queue_entries' collection
+        // Delete the first student from the queue
         const studentDocRef = doc(db, 'queue_entries', nextStudent.id);
-        
-        // FUTURE: Instead of deleting, we typically UPDATE the status to 'called' or 'done'
         await deleteDoc(studentDocRef);
         
-        // This alert is just for confirmation
-        alert(`Calling ${nextStudent.studentName} - They have been removed from the queue!`);
+        // Update positions for all remaining students
+        const studentsToUpdate = queue.slice(1); // Everyone after the first student
+        const updatePromises = studentsToUpdate.map((student, index) => {
+          const newPosition = index + 1; // New positions start at 1
+          return updateDoc(doc(db, 'queue_entries', student.id), {
+            position: newPosition
+          });
+        });
         
-        // Note: setQueue(queue.slice(1)) is NO LONGER NEEDED. 
-        // Firestore update handles the state change automatically!
+        await Promise.all(updatePromises);
+        
+        alert(`Calling ${nextStudent.studentName} - They have been removed from the queue!`);
         
       } catch (error) {
         console.error("Error removing student:", error);
+        alert('Failed to call next student. Please try again.');
       }
     }
   };
