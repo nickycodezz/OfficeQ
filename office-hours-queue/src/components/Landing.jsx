@@ -19,7 +19,7 @@ function Landing({ onSelectRole, onSelectProfessor }) {
         const profs = querySnapshot.docs.map(doc => ({
           id: doc.id, // This is the Document ID we need for the queue
           ...doc.data()
-        }));
+        })).filter(prof => prof.isAvailable !== false); // Only show available professors
         setProfessors(profs);
       } catch (error) {
         console.error("Error fetching professors:", error);

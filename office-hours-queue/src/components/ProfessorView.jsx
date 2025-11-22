@@ -27,6 +27,12 @@ function ProfessorView({ onBack, professorData }) {
 
   // --- 1. FIREBASE REAL-TIME LISTENER (useEffect) ---
   useEffect(() => {
+    if (!PROFESSOR_ID) {
+      console.error('No professor ID provided');
+      setLoading(false);
+      return;
+    }
+    
     // 1. Construct the Query
     const queueQuery = query(
       collection(db, 'queue_entries'),
@@ -53,8 +59,8 @@ function ProfessorView({ onBack, professorData }) {
     // 3. Clean up the listener when the component is removed
     return () => unsubscribe();
     
-  // Empty dependency array means this effect runs only on mount/unmount
-  }, []); 
+  // Add PROFESSOR_ID to dependency array
+  }, [PROFESSOR_ID]); 
 
   // --- 2. ACTION FUNCTIONS (Placeholder for Firebase Writes) ---
 
@@ -82,12 +88,31 @@ function ProfessorView({ onBack, professorData }) {
   };
 
   const toggleStatus = async () => {
-    // FUTURE: This logic should update the 'professors' document in Firestore
     const newStatus = status === 'available' ? 'busy' : 'available';
-    // const professorDocRef = doc(db, 'professors', PROFESSOR_ID);
-    // await updateDoc(professorDocRef, { isAvailable: newStatus === 'available' });
-    
     setStatus(newStatus);
+  };
+  
+  const endOfficeHours = async () => {
+    console.log('endOfficeHours called, PROFESSOR_ID:', PROFESSOR_ID);
+    
+    if (!PROFESSOR_ID) {
+      console.error('No professor ID available');
+      alert('Error: No professor ID found. Please log in again.');
+      return;
+    }
+    
+    try {
+      console.log('Updating professor document...');
+      const professorDocRef = doc(db, 'professors', PROFESSOR_ID);
+      await updateDoc(professorDocRef, { isAvailable: false });
+      
+      console.log('Professor marked as unavailable');
+      alert('Office hours ended. You will no longer appear in the student list.');
+      onBack(); // Return to landing page
+    } catch (error) {
+      console.error('Error ending office hours:', error);
+      alert('Failed to end office hours. Please try again.');
+    }
   };
   
   // --- 3. RENDER LOGIC ---
@@ -179,7 +204,10 @@ function ProfessorView({ onBack, professorData }) {
             >
               {status === 'available' ? 'Mark as Busy' : 'Mark as Available'}
             </button>
-            <button className="flex-1 bg-red-500 hover:bg-red-600 text-white font-semibold py-3 rounded-lg transition">
+            <button 
+              onClick={endOfficeHours}
+              className="flex-1 bg-red-500 hover:bg-red-600 text-white font-semibold py-3 rounded-lg transition"
+            >
               End Office Hours
             </button>
           </div>

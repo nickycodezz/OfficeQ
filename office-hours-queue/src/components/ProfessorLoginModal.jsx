@@ -46,6 +46,7 @@ function ProfessorLoginModal({ onLogin, onClose }) {
           name: name.trim(),
           email: email.trim(),
           office: office.trim() || 'Not specified',
+          isAvailable: true,
           createdAt: new Date().toISOString()
         });
         professorId = docRef.id;
