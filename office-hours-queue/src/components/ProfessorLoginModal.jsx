@@ -69,13 +69,13 @@ function ProfessorLoginModal({ onLogin, onClose }) {
   };
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-      <div className="bg-white rounded-xl shadow-2xl max-w-md w-full p-8">
+    <div className="fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center p-4 z-50">
+      <div className="bg-white rounded-xl shadow-2xl max-w-md w-full p-8 border-4 border-yellow-400">
         <div className="flex justify-between items-center mb-6">
-          <h2 className="text-2xl font-bold text-gray-800">Professor Login</h2>
+          <h2 className="text-2xl font-bold text-emerald-900">Professor Login</h2>
           <button
             onClick={onClose}
-            className="text-gray-500 hover:text-gray-700 text-2xl"
+            className="text-gray-500 hover:text-emerald-900 text-2xl font-bold"
           >
             ×
           </button>
@@ -83,49 +83,49 @@ function ProfessorLoginModal({ onLogin, onClose }) {
 
         <form onSubmit={handleSubmit}>
           <div className="mb-4">
-            <label className="block text-gray-700 font-semibold mb-2">
-              Name <span className="text-red-500">*</span>
+            <label className="block text-emerald-900 font-bold mb-2">
+              Name <span className="text-red-600">*</span>
             </label>
             <input
               type="text"
               value={name}
               onChange={(e) => setName(e.target.value)}
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
+              className="w-full px-4 py-2 border-2 border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-yellow-500 focus:border-yellow-500"
               placeholder="Enter your name"
               disabled={loading}
             />
           </div>
 
           <div className="mb-4">
-            <label className="block text-gray-700 font-semibold mb-2">
-              Email <span className="text-red-500">*</span>
+            <label className="block text-emerald-900 font-bold mb-2">
+              Email <span className="text-red-600">*</span>
             </label>
             <input
               type="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
+              className="w-full px-4 py-2 border-2 border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-yellow-500 focus:border-yellow-500"
               placeholder="Enter your email"
               disabled={loading}
             />
           </div>
 
           <div className="mb-6">
-            <label className="block text-gray-700 font-semibold mb-2">
+            <label className="block text-emerald-900 font-bold mb-2">
               Office Location (Optional)
             </label>
             <input
               type="text"
               value={office}
               onChange={(e) => setOffice(e.target.value)}
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
+              className="w-full px-4 py-2 border-2 border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-yellow-500 focus:border-yellow-500"
               placeholder="e.g., MSC 3106"
               disabled={loading}
             />
           </div>
 
           {error && (
-            <div className="mb-4 p-3 bg-red-100 border border-red-400 text-red-700 rounded-lg">
+            <div className="mb-4 p-3 bg-red-100 border-2 border-red-400 text-red-800 rounded-lg font-semibold">
               {error}
             </div>
           )}
@@ -134,14 +134,14 @@ function ProfessorLoginModal({ onLogin, onClose }) {
             <button
               type="button"
               onClick={onClose}
-              className="flex-1 bg-gray-300 hover:bg-gray-400 text-gray-800 font-semibold py-3 rounded-lg transition"
+              className="flex-1 bg-gray-300 hover:bg-gray-400 text-gray-900 font-bold py-3 rounded-lg transition"
               disabled={loading}
             >
               Cancel
             </button>
             <button
               type="submit"
-              className="flex-1 bg-green-500 hover:bg-green-600 text-white font-semibold py-3 rounded-lg transition disabled:bg-gray-400"
+              className="flex-1 bg-emerald-700 hover:bg-emerald-800 text-white font-bold py-3 rounded-lg transition disabled:bg-gray-400 shadow-md"
               disabled={loading}
             >
               {loading ? 'Logging in...' : 'Login'}
