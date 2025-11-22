@@ -38,13 +38,48 @@ function Landing({ onSelectRole, onSelectProfessor }) {
   // If a role hasn't been selected, show the initial choice screen
   if (!selectedRole) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-emerald-900 via-emerald-800 to-emerald-950">
-        <header className="text-center pt-12 pb-8 px-4">
-          <h1 className="text-6xl font-bold mb-2 text-yellow-400">OfficeQ</h1>
-          <p className="text-xl text-yellow-100">Virtual Office Hours Queue</p>
+      <div className="min-h-screen bg-gradient-to-br from-emerald-900 via-emerald-800 to-emerald-950 relative overflow-hidden">
+        {/* Decorative Background Icons */}
+        <div className="absolute inset-0 overflow-hidden pointer-events-none">
+          {/* Top Left */}
+          <div className="absolute top-10 left-10 text-6xl opacity-20 animate-pulse">📚</div>
+          <div className="absolute top-32 left-32 text-4xl opacity-15">✏️</div>
+          
+          {/* Top Right */}
+          <div className="absolute top-20 right-20 text-5xl opacity-20 animate-pulse" style={{animationDelay: '1s'}}>🎓</div>
+          <div className="absolute top-48 right-48 text-3xl opacity-15">📝</div>
+          
+          {/* Bottom Left */}
+          <div className="absolute bottom-20 left-16 text-5xl opacity-20 animate-pulse" style={{animationDelay: '2s'}}>💡</div>
+          <div className="absolute bottom-40 left-40 text-4xl opacity-15">🖊️</div>
+          
+          {/* Bottom Right */}
+          <div className="absolute bottom-24 right-24 text-6xl opacity-20 animate-pulse" style={{animationDelay: '1.5s'}}>📖</div>
+          <div className="absolute bottom-52 right-52 text-3xl opacity-15">🏫</div>
+          
+          {/* Middle decorations */}
+          <div className="absolute top-1/3 left-1/4 text-4xl opacity-10">⏰</div>
+          <div className="absolute top-2/3 right-1/3 text-4xl opacity-10">👥</div>
+          <div className="absolute top-1/2 left-1/3 text-3xl opacity-10">✅</div>
+          
+          {/* Floating circles for extra flair */}
+          <div className="absolute top-1/4 right-1/4 w-32 h-32 bg-yellow-400 rounded-full opacity-5 blur-xl"></div>
+          <div className="absolute bottom-1/4 left-1/4 w-40 h-40 bg-emerald-400 rounded-full opacity-5 blur-xl"></div>
+        </div>
+
+        <header className="text-center pt-12 pb-8 px-4 relative z-10">
+          <div className="flex items-center justify-center mb-4">
+            <div className="relative">
+              <h1 className="text-7xl font-black mb-2 text-yellow-400 tracking-tight" style={{ fontFamily: 'system-ui, -apple-system, sans-serif' }}>
+                <span className="inline-block transform hover:scale-105 transition duration-300">Office</span>
+                <span className="inline-block bg-yellow-400 text-emerald-900 px-3 py-1 rounded-lg ml-1 shadow-lg transform hover:scale-105 transition duration-300">Q</span>
+              </h1>
+            </div>
+          </div>
+          <p className="text-xl text-yellow-100 font-semibold">Virtual Office Hours Queue</p>
         </header>
 
-        <div className="max-w-4xl mx-auto grid md:grid-cols-2 gap-6 px-4">
+        <div className="max-w-4xl mx-auto grid md:grid-cols-2 gap-6 px-4 relative z-10">
           {/* Student Card */}
           <div className="bg-white p-8 rounded-xl shadow-2xl hover:shadow-3xl transition border-2 border-yellow-400">
             <div className="text-6xl mb-4 text-center">🎓</div>
@@ -72,7 +107,7 @@ function Landing({ onSelectRole, onSelectProfessor }) {
           </div>
         </div>
 
-        <footer className="text-yellow-100 text-center mt-12 pb-8 px-4">
+        <footer className="text-yellow-100 text-center mt-12 pb-8 px-4 relative z-10">
           <p className="text-sm opacity-90">Built for USF • Skip the line, save time</p>
         </footer>
 
