@@ -144,9 +144,26 @@ function StudentView({ onBack, professorId, professorName, professorOffice }) {
   // JOIN QUEUE VIEW (Before joining)
   if (!inQueue) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-emerald-900 via-emerald-800 to-emerald-950 p-4">
+      <div className="min-h-screen bg-gradient-to-br from-emerald-900 via-emerald-800 to-emerald-950 p-4 relative overflow-hidden">
+        {/* Subtle background pattern */}
+        <div className="absolute inset-0 opacity-5" style={{
+          backgroundImage: 'radial-gradient(circle, white 1px, transparent 1px)',
+          backgroundSize: '40px 40px'
+        }}></div>
+        
+        {/* Subtle USF watermark */}
+        <div className="absolute right-[-3%] bottom-[10%] text-[15rem] font-black text-yellow-400/3 select-none pointer-events-none transform rotate-12">
+          USF
+        </div>
+        
+        {/* Decorative elements */}
+        <div className="absolute left-[5%] top-[15%] w-24 h-24 border-2 border-yellow-400/8 transform rotate-45"></div>
+        <div className="absolute right-[8%] top-[25%] opacity-4">
+          <div className="text-yellow-400 text-5xl transform -rotate-12">⚡</div>
+        </div>
+        
         {/* MOBILE RESPONSIVENESS TWEAK: px-4 on mobile */}
-        <div className="max-w-2xl mx-auto pt-12 px-4 sm:px-0"> 
+        <div className="max-w-2xl mx-auto pt-12 px-4 sm:px-0 relative z-10"> 
           <button 
             onClick={onBack}
             className="text-yellow-300 mb-6 flex items-center hover:text-yellow-100 transition duration-150 font-semibold"
@@ -259,7 +276,7 @@ function StudentView({ onBack, professorId, professorName, professorOffice }) {
           {/* LEAVE BUTTON - ANIMATION TWEAK */}
           <button 
             onClick={leaveQueue}
-            className="w-full bg-red-600 hover:bg-red-700 text-white font-bold py-3 rounded-lg transition duration-300 mb-6 shadow-md"
+            className="w-full bg-gray-600 hover:bg-gray-700 text-white font-bold py-3 rounded-lg transition duration-300 mb-6 shadow-md"
           >
             Leave Queue
           </button>

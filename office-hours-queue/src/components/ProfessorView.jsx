@@ -108,12 +108,21 @@ function ProfessorView({ onBack, professorData }) {
     }
     
     try {
-      console.log('Updating professor document...');
-      const professorDocRef = doc(db, 'professors', PROFESSOR_ID);
-      await updateDoc(professorDocRef, { isAvailable: false });
+      console.log('Deleting professor document and clearing queue...');
       
-      console.log('Professor marked as unavailable');
-      alert('Office hours ended. You will no longer appear in the student list.');
+      // Delete all queue entries for this professor
+      const queueEntries = queue;
+      const deleteQueuePromises = queueEntries.map(entry => 
+        deleteDoc(doc(db, 'queue_entries', entry.id))
+      );
+      await Promise.all(deleteQueuePromises);
+      
+      // Delete the professor document
+      const professorDocRef = doc(db, 'professors', PROFESSOR_ID);
+      await deleteDoc(professorDocRef);
+      
+      console.log('Professor and queue deleted');
+      alert('Office hours ended. All students have been removed from the queue.');
       onBack(); // Return to landing page
     } catch (error) {
       console.error('Error ending office hours:', error);
@@ -189,7 +198,7 @@ function ProfessorView({ onBack, professorData }) {
                       <p className="font-bold text-gray-900">#{student.position} {student.studentName}</p>
                       <p className="text-sm text-gray-600">Joined {formatTimeAgo(student.joinedAt)}</p>
                     </div>
-                    <button className="text-red-600 hover:text-red-800 text-sm font-bold">
+                    <button className="text-gray-600 hover:text-gray-800 text-sm font-bold">
                       Remove
                     </button>
                   </div>
@@ -212,7 +221,7 @@ function ProfessorView({ onBack, professorData }) {
             </button>
             <button 
               onClick={endOfficeHours}
-              className="flex-1 bg-red-600 hover:bg-red-700 text-white font-bold py-3 rounded-lg transition shadow-md"
+              className="flex-1 bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-3 rounded-lg transition shadow-md"
             >
               End Office Hours
             </button>
